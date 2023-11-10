@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Memory Randomizer</title>
+    <script>
+      var answers = [];
+
+      function answer_toggle(hide=false) {
+        var content = document.getElementById("content");
+        var button = document.getElementById("toggle");
+
+        if (content.style.display != "none" || hide) {
+          content.style.display = "none";
+          button.value = "Show Answer";
+        } else {
+          content.style.display = "block";
+          button.value = "Hide Answer";
+        }
+      }
+
+      function randomize() {
+        var test = document.getElementById("test");
+        var text = document.getElementById("answer").value.trim();
+        var words = [];
+        answers = [];
+
+        var matches = text.matchAll(/(\b[a-z_-]+\b|\b[,.?!]\s*)/ig);
+        for (var match of matches) {
+          words.push(match[0].trim());
+        }
+
+        var test_html = '';
+        var word_ptr = 0;
+        var answer_ptr = 0;
+        TEST: while (true) {
+          // show some words
+          var end = word_ptr+Math.min(word_ptr,1)+Math.floor(Math.random()*3);
+          for (;word_ptr<Math.min(end,words.length);word_ptr++) {
+            if (words[word_ptr].match(/^[,.?!]/)) {
+              test_html = test_html+words[word_ptr];
+            } else {
+              test_html = test_html+' '+words[word_ptr];
+            }
+          }
+          if (word_ptr >= words.length) break TEST;
+
+          while (words[word_ptr].match(/^[,.?!]/)) {
+            test_html = test_html+words[word_ptr];
+            word_ptr++;
+            if (word_ptr >= words.length) break TEST;
+          }
+
+          // replace some words with input fields
+          end = word_ptr+Math.floor(Math.random()*3)+1;
+          test_html = test_html+' <input type="text" id="q'+answer_ptr+'" />';
+          for (;word_ptr<Math.min(end,words.length);word_ptr++) {
+            if (words[word_ptr].match(/^[,.?!]/)) {
+              break;
+            } else {
+              if (answers.length>answer_ptr) {
+                answers[answer_ptr] = answers[answer_ptr]+' '+words[word_ptr];
+              } else {
+                answers[answer_ptr] = words[word_ptr];
+              }
+            }
+          }
+          answer_ptr++;
+          if (word_ptr >= words.length) break TEST;
+        }
+        test.innerHTML = test_html;
+
+        answer_toggle(true);
+      }
+
+      function grade() {
+        for (var i=0;i<answers.length;i++) {
+          var a = document.getElementById('q'+i).value.trim();
+          if (a == answers[i]) {
+            document.getElementById('q'+i).className = 'correct';
+          } else {
+            document.getElementById('q'+i).className = 'incorrect';
+          }
+        }
+      }
+    </script>
+    <style>
+      .correct {
+        border: 3px solid #00FF00;
+      }
+      .incorrect {
+        border: 3px solid #FF0000;
+      }
+    </style>
+  </head>
+  <body>
+    <form action="">
+      <p id="test">
+      </p>
+      <p>
+        <input type="button" value="Randomize" onclick="randomize()" />
+        <input type="button" value="Grade" onclick="grade()" />
+        <input type="button" value="Hide Answer" id="toggle" onclick="answer_toggle()" />
+      </p>
+    </form>
+    <div id="content">
+      <p>
+        <textarea id="answer" name="answer" rows="4" cols="80">This is some test text, just for the purpose of testing this thing.</textarea>
+      </p>
+    </div>
+  </body>
+</html>
