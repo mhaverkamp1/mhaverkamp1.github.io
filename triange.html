@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Sierpinski Triangle</title>
+    <script>
+      var ctx;
+      var speed;
+      var maxPoints;
+      var startButton;
+      var vertex;
+      var pause = true;
+      var count = 0;
+
+      function render(x, y) {
+        if (count>parseInt(maxPoints.value,10)) {
+          pause = true;
+          startButton.value = "Start";
+          startButton.onclick = run;
+        }
+
+        if (pause) {
+          setTimeout(render, 1000, x, y);
+          return;
+        }
+
+        // do *speed* points per 1ms run to speed things up
+        var numPoints = parseInt(speed.value,10);
+        for (var i=0; i<numPoints; i++) {
+          var randomVertex = vertex[Math.floor(Math.random()*3)];
+          x = (x+randomVertex.x)/2;
+          y = (y+randomVertex.y)/2;
+          ctx.fillRect(x,y,1,1);
+        }
+        ctx.save();
+
+        count += numPoints;
+        setTimeout(render, 0, x, y);
+      }
+
+      function resizeCanvasToDisplaySize(canvas) {
+         // look up the size the canvas is being displayed
+         const width = canvas.clientWidth;
+         const height = canvas.clientHeight;
+
+         // If it's resolution does not match change it
+         if (canvas.width !== width || canvas.height !== height) {
+           canvas.width = width;
+           canvas.height = height;
+
+           vertex = [{
+             x: width/2,
+             y: 0
+           },{
+             x: 0,
+             y: height-1
+           },{
+             x: width-1,
+             y: height-1
+           }];
+           return true;
+         }
+
+         return false;
+      }
+
+      function reinit() {
+        count = 0;
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.save();
+      }
+
+      function run() {
+        pause = false;
+        startButton.value = "Pause";
+        startButton.onclick = function() {
+          pause = true;
+          startButton.value = "Start";
+          startButton.onclick = run;
+        };
+      }
+
+      function init() {
+        ctx = document.getElementById("c").getContext("2d");
+        speed = document.getElementById("speed");
+        maxPoints = document.getElementById("maxPoints");
+        startButton = document.getElementById("start");
+
+        resizeCanvasToDisplaySize(ctx.canvas);
+        render(vertex[0].x, vertex[1].y, 0);
+      }
+    </script>
+    <style>
+      body { margin: 0; }
+      canvas { 
+        display: block; 
+        width: 100vw; 
+        height: 100vh;  
+        position: fixed;
+      }
+      #content {
+        position: absolute;
+        margin: 0 1em;
+      }
+    </style>
+  </head>
+  <body onload="init()">
+    <canvas id="c"></canvas>
+    <div id="content">
+      <form action="">
+        <p>Points / cycle <input type="number" value="10" id="speed" /></p>
+        <p>Max # Points <input type="number" value="1000000" id="maxPoints" /></p>
+        <p>
+          <input type="button" value="Start" id="start" onclick="run()" />
+          <input type="button" value="Clear" id="clear" onclick="reinit()" />
+        </p>
+      </form>
+    </div>
+  </body>
+</html>
