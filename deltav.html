@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Delta V Calculator</title>
+    <style>
+      #loadDiv {
+        visibility: hidden;
+        position: absolute;
+        left: 0px;
+        top: 0px;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+        z-index: 1000;
+      }
+      #loadDiv div {
+        width: 300px;
+        margin: 100px auto;
+        background-color: #fff;
+        border: 1px solid #000;
+        padding: 15px;
+        text-align: center;
+      }
+      input[type=text] {
+        width: 100px;
+      }
+    </style>
+    <script type="text/javascript">
+      function formDataToArray() {
+        var ret = new Array();
+        for (var s=1;s<=9;s++) {
+          ret[s] = new Object();
+          ret[s].wm = parseFloat(document.getElementById("s"+s+"wm").value);
+          ret[s].dm = parseFloat(document.getElementById("s"+s+"dm").value);
+          ret[s].isp = parseFloat(document.getElementById("s"+s+"isp").value);
+          ret[s].count = parseInt(document.getElementById("s"+s+"c").value);
+        }
+        return ret;
+      }
+
+      function calculate() {
+        var twm = 0;
+        var tdm = 0;
+        var tdv = 0;
+
+        var data = formDataToArray();
+        for (var s=1;s<=9;s++) {
+          if (isNaN(data[s].count)) data[s].count = 1;
+          if (isNaN(data[s].wm) || isNaN(data[s].dm) || isNaN(data[s].isp)) {
+            document.getElementById("s"+s+"dv").value = "";
+          } else {
+            var dv = 0;
+            for (var c=1;c<=data[s].count;c++) {
+              dv = dv+Math.log((twm+data[s].wm)/(twm+data[s].dm))*data[s].isp*9.81;
+              twm = twm+data[s].wm;
+              tdm = tdm+data[s].dm;
+            }
+            tdv = tdv+dv;
+            document.getElementById("s"+s+"dv").value = dv;
+          }
+        }
+
+        document.getElementById("twm").value = twm;
+        document.getElementById("tdm").value = tdm;
+        document.getElementById("tdv").value = tdv;
+      }
+
+      function cancelLoad() {
+        document.getElementById("loadDiv").style.visibility = "hidden";
+      }
+
+      function clearForm() {
+        for (var s=1;s<=9;s++) {
+          document.getElementById("s"+s+"wm").value = "";
+          document.getElementById("s"+s+"dm").value = "";
+          document.getElementById("s"+s+"isp").value = "";
+          document.getElementById("s"+s+"c").value = "";
+          document.getElementById("s"+s+"dv").value = "";
+        }
+        document.getElementById("twm").value = "";
+        document.getElementById("tdm").value = "";
+        document.getElementById("tdv").value = "";
+      }
+
+      function deleteStoredData() {
+        var shipNameSelect = document.getElementById("shipNameSelect");
+        var shipName = shipNameSelect.options[shipNameSelect.selectedIndex].value;
+        if (confirm("Really delete "+shipName+"?")) {
+          localStorage.removeItem("deltav_"+shipName);
+          document.getElementById("loadDiv").style.visibility = "hidden";
+        }
+      }
+
+      function loadDialog() {
+        var shipNameSelect = document.getElementById("shipNameSelect");
+        shipNameSelect.options.length = 0;
+        Object.keys(localStorage).sort().forEach(function(key) {
+          if (key.length > 7 && key.substring(0,7) === "deltav_") {
+            var name = key.substring(7);
+            shipNameSelect.options[shipNameSelect.options.length] = new Option(name,name,false,false);
+          }
+        });
+        document.getElementById("loadDiv").style.visibility = "visible";
+      }
+
+      function loadStoredData() {
+        document.getElementById("loadDiv").style.visibility = "hidden";
+
+        var shipNameSelect = document.getElementById("shipNameSelect");
+        var shipName = shipNameSelect.options[shipNameSelect.selectedIndex].value;
+        var data = JSON.parse(localStorage.getItem("deltav_"+shipName));
+        for (var s=1;s<=9;s++) {
+          document.getElementById("s"+s+"wm").value = data[s].wm;
+          document.getElementById("s"+s+"dm").value = data[s].dm;
+          document.getElementById("s"+s+"isp").value = data[s].isp;
+          document.getElementById("s"+s+"c").value = data[s].count;
+        }
+        calculate();
+      }
+
+      function saveForm() {
+        var name = prompt("Enter Name","");
+        if (name) {
+          if ("deltav_"+name in localStorage && !confirm(name+" already exists.  Overwrite?")) return;
+          var data = formDataToArray();
+          localStorage.setItem("deltav_"+name,JSON.stringify(data));
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <table>
+      <tr>
+        <th>Stage</th>
+        <th>Wet Mass</th>
+        <th>Dry Mass</th>
+        <th>Isp</th>
+        <th>Count</th>
+        <th>Delta V</th>
+      </tr>
+      <tr>
+        <td>1</td>
+        <td><input type="text" id="s1wm" onchange="calculate();" />t</td>
+        <td><input type="text" id="s1dm" onchange="calculate();" />t</td>
+        <td><input type="text" id="s1isp" onchange="calculate();" />s</td>
+        <td><input type="text" id="s1c" onchange="calculate();" /></td>
+        <td><input type="text" id="s1dv" readonly="readonly" />m/s</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><input type="text" id="s2wm" onchange="calculate();" />t</td>
+        <td><input type="text" id="s2dm" onchange="calculate();" />t</td>
+        <td><input type="text" id="s2isp" onchange="calculate();" />s</td>
+        <td><input type="text" id="s2c" onchange="calculate();" /></td>
+        <td><input type="text" id="s2dv" readonly="readonly" />m/s</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><input type="text" id="s3wm" onchange="calculate();" />t</td>
+        <td><input type="text" id="s3dm" onchange="calculate();" />t</td>
+        <td><input type="text" id="s3isp" onchange="calculate();" />s</td>
+        <td><input type="text" id="s3c" onchange="calculate();" /></td>
+        <td><input type="text" id="s3dv" readonly="readonly" />m/s</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><input type="text" id="s4wm" onchange="calculate();" />t</td>
+        <td><input type="text" id="s4dm" onchange="calculate();" />t</td>
+        <td><input type="text" id="s4isp" onchange="calculate();" />s</td>
+        <td><input type="text" id="s4c" onchange="calculate();" /></td>
+        <td><input type="text" id="s4dv" readonly="readonly" />m/s</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td><input type="text" id="s5wm" onchange="calculate();" />t</td>
+        <td><input type="text" id="s5dm" onchange="calculate();" />t</td>
+        <td><input type="text" id="s5isp" onchange="calculate();" />s</td>
+        <td><input type="text" id="s5c" onchange="calculate();" /></td>
+        <td><input type="text" id="s5dv" readonly="readonly" />m/s</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td><input type="text" id="s6wm" onchange="calculate();" />t</td>
+        <td><input type="text" id="s6dm" onchange="calculate();" />t</td>
+        <td><input type="text" id="s6isp" onchange="calculate();" />s</td>
+        <td><input type="text" id="s6c" onchange="calculate();" /></td>
+        <td><input type="text" id="s6dv" readonly="readonly" />m/s</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td><input type="text" id="s7wm" onchange="calculate();" />t</td>
+        <td><input type="text" id="s7dm" onchange="calculate();" />t</td>
+        <td><input type="text" id="s7isp" onchange="calculate();" />s</td>
+        <td><input type="text" id="s7c" onchange="calculate();" /></td>
+        <td><input type="text" id="s7dv" readonly="readonly" />m/s</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td><input type="text" id="s8wm" onchange="calculate();" />t</td>
+        <td><input type="text" id="s8dm" onchange="calculate();" />t</td>
+        <td><input type="text" id="s8isp" onchange="calculate();" />s</td>
+        <td><input type="text" id="s8c" onchange="calculate();" /></td>
+        <td><input type="text" id="s8dv" readonly="readonly" />m/s</td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td><input type="text" id="s9wm" onchange="calculate();" />t</td>
+        <td><input type="text" id="s9dm" onchange="calculate();" />t</td>
+        <td><input type="text" id="s9isp" onchange="calculate();" />s</td>
+        <td><input type="text" id="s9c" onchange="calculate();" /></td>
+        <td><input type="text" id="s9dv" readonly="readonly" />m/s</td>
+      </tr>
+      <tr>
+        <td>total</td>
+        <td><input type="text" id="twm" readonly="readonly" />t</td>
+        <td><input type="text" id="tdm" readonly="readonly" />t</td>
+        <td></td>
+        <td></td>
+        <td><input type="text" id="tdv" readonly="readonly" />m/s</td>
+      </tr>
+    </table>
+    <input type="button" value="Load" onclick="loadDialog();" />
+    <input type="button" value="Save" onclick="saveForm();" />
+    <input type="button" value="Clear" onclick="clearForm();" />
+    <br />
+    <div id="loadDiv">
+      <div>
+        <select id="shipNameSelect">
+          <option>bob</option>
+          <option>s1</option>
+        </select>
+        <br />
+        <input type="button" value="Load" onclick="loadStoredData();" />
+        <input type="button" value="Cancel" onclick="cancelLoad();" />
+        <input type="button" value="Delete" onclick="deleteStoredData();" />
+      </div>
+    </div>
+  </body>
+</html>
