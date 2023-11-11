@@ -69,6 +69,7 @@
         }
         test.innerHTML = test_html;
 
+        localStorage.setItem('memrando_text',text);
         answer_toggle(true);
       }
 
@@ -82,6 +83,13 @@
           }
         }
       }
+
+      function init() {
+        var text = localStorage.getItem('memrando_text');
+        if (text!=null) {
+          document.getElementById("answer").value = text;
+        }
+      }
     </script>
     <style>
       .correct {
@@ -92,7 +100,7 @@
       }
     </style>
   </head>
-  <body>
+  <body onload="init()">
     <form action="">
       <p id="test">
       </p>
