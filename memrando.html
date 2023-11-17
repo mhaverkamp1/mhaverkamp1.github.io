@@ -4,6 +4,8 @@
     <title>Memory Randomizer</title>
     <script>
       var answers = [];
+      var punct_re = /^[,.?!:"]/;
+      var word_re = /(\b[a-z_-]+\b|[,.?!:"]\s*)/ig;
 
       function answer_toggle(hide=false) {
         var content = document.getElementById("content");
@@ -24,7 +26,7 @@
         var words = [];
         answers = [];
 
-        var matches = text.matchAll(/(\b[a-z_-]+\b|\b[,.?!]\s*)/ig);
+        var matches = text.matchAll(word_re);
         for (var match of matches) {
           words.push(match[0].trim());
         }
@@ -36,7 +38,7 @@
           // show some words
           var end = word_ptr+Math.min(word_ptr,1)+Math.floor(Math.random()*3);
           for (;word_ptr<Math.min(end,words.length);word_ptr++) {
-            if (words[word_ptr].match(/^[,.?!]/)) {
+            if (words[word_ptr].match(punct_re)) {
               test_html = test_html+words[word_ptr];
             } else {
               test_html = test_html+' '+words[word_ptr];
@@ -44,7 +46,7 @@
           }
           if (word_ptr >= words.length) break TEST;
 
-          while (words[word_ptr].match(/^[,.?!]/)) {
+          while (words[word_ptr].match(punct_re)) {
             test_html = test_html+words[word_ptr];
             word_ptr++;
             if (word_ptr >= words.length) break TEST;
@@ -54,7 +56,7 @@
           end = word_ptr+Math.floor(Math.random()*3)+1;
           test_html = test_html+' <input type="text" id="q'+answer_ptr+'" />';
           for (;word_ptr<Math.min(end,words.length);word_ptr++) {
-            if (words[word_ptr].match(/^[,.?!]/)) {
+            if (words[word_ptr].match(punct_re)) {
               break;
             } else {
               if (answers.length>answer_ptr) {
