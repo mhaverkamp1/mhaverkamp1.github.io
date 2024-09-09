@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Vocabulary Test</title>
+    <script>
+      var anwserKey = [];
+
+      function init() {
+        var words = localStorage.getItem('vocab_test');
+        if (words != null) {
+          words = JSON.parse(words);
+          if (words.length>0) {
+            var table = document.getElementById("answer_table");
+            for (var i=0;i<words.length;i++) {
+              if (i>0) addWord();
+              table.rows[i].cells[0].children[0].value = words[i][0];
+              table.rows[i].cells[1].children[0].value = words[i][1];
+            }
+          }
+          generateTest();
+        } else {
+          showAnswers();
+        }
+      }
+
+      function addWord() {
+        var table = document.getElementById("answer_table");
+        var i = table.rows.length;
+        var row = table.insertRow(i);
+        var cell1 = row.insertCell(0);
+        var cell2 = row.insertCell(1);
+        var cell3 = row.insertCell(2);
+        cell1.innerHTML = '<input type="text" />';
+        cell2.innerHTML = '<input type="text" size="80" />';
+        cell3.innerHTML = '<input type="button" value="-" />';
+
+        for (var i=0, row; row=table.rows[i]; i++) {
+          if (row.cells[2].children.length > 0) {
+            var rowNum = i;
+            row.cells[2].children[0].addEventListener('click',function(e) {
+              e.currentTarget.parentElement.parentElement.remove();
+            });
+          }
+        }
+      }
+
+      function generateTest() {
+        var words = [];
+        var table = document.getElementById("answer_table");
+        var wordSet = new Set();
+        for (var i=0, row; row=table.rows[i]; i++) {
+          words.push([
+            row.cells[0].children[0].value,
+            row.cells[1].children[0].value
+          ]);
+          wordSet.add(i);
+        }
+        localStorage.setItem('vocab_test',JSON.stringify(words));
+
+        table = document.getElementById("test_table");
+        for (var i=table.rows.length-1, row; row=table.rows[i]; i--) {
+          row.remove();
+        }
+
+        answerKey = [];
+        while (wordSet.size>0) {
+          var i = 0;
+          do {
+            i = Math.floor(Math.random() * words.length);
+          } while (!wordSet.has(i));
+          wordSet.delete(i);
+          answerKey.push(words[i][0]);
+
+          var row = table.insertRow(-1);
+          var cell1 = row.insertCell(0);
+          var cell2 = row.insertCell(1);
+          cell1.innerHTML = '<input type="text" />';
+          cell2.innerHTML = words[i][1];
+        }
+
+        document.getElementById("answers").style.display = 'none';
+        document.getElementById("test").style.display = 'initial';
+      }
+
+      function showAnswers() {
+        document.getElementById("answers").style.display = 'initial';
+        document.getElementById("test").style.display = 'none';
+      }
+
+      function grade() {
+        var table = document.getElementById("test_table");
+        for (var i=0, row; row=table.rows[i]; i++) {
+          if (row.cells[0].children[0].value == answerKey[i]) {
+            row.cells[0].children[0].className = 'correct';
+          } else {
+            row.cells[0].children[0].className = 'incorrect';
+          }
+        }
+      }
+
+      function clearAnswers() {
+        answerKey = [];
+        var table = document.getElementById("answer_table");
+        for (var i=table.rows.length-1, row; i>0 ; i--) {
+          table.rows[i].remove();
+        }
+        table.rows[0].cells[0].children[0].value = '';
+        table.rows[0].cells[1].children[0].value = '';
+        localStorage.removeItem("vocab_test");
+      }
+    </script>
+    <style>
+      .correct {
+        border: 3px solid #00FF00;
+      }
+      .incorrect {
+        border: 3px solid #FF0000;
+      }
+    </style>
+  </head>
+  <body onload="init()">
+    <form action="">
+      <div id="answers">
+        <p>
+          <input type="button" value="Add Word" onclick="addWord()" />
+          <input type="button" value="Generate Test" onclick="generateTest()" />
+          <input type="button" value="Clear" onclick="clearAnswers()" />
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Word</th>
+              <th>Definition</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="answer_table">
+            <tr>
+              <td><input type="text" /></td>
+              <td><input type="text" size="80" /></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="test">
+        <input type="button" value="Grade" onclick="grade()" />
+        <input type="button" value="Edit Answers" onclick="showAnswers()" />
+        <input type="button" value="Regenerate Test" onclick="generateTest()" />
+        <table>
+          <thead>
+            <tr>
+              <th>Word</th>
+              <th>Definition</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="test_table">
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </body>
+</html>
